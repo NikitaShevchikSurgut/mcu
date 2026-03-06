@@ -1,0 +1,6 @@
+#pragma once
+
+#define DEVICE_NAME "my-pico-device"
+#define DEVICE_VRSN "v0.0.1"
+
+int main();
