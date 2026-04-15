@@ -1,33 +1,34 @@
-#include "pico/stdlib.h"
-#include "stdio.h"
-
-#include "led/led.h"
 #include "main.h"
+#include "led/led.h"
+#include "pico/stdlib.h"
+#include "hardware/gpio.h"
+#include "pico/stdio.h"
 
-int main()
-{
+#define DEVICE_NAME "my-pico-device"
+#define DEVICE_VRSN "v0.0.1"
+
+
+int main(){
     stdio_init_all();
     led_init();
-    while (1)
-    {
-        int c = getchar();
-        char symbol = (char)c;
-        switch (symbol)
+    while(1){
+        char symbol = getchar();
+        switch(symbol)
         {
-        case 'e':
-            led_enable();
-            printf("LED on\n");
-            break;
-        case 'd':
-            led_disable();
-            printf("LED off\n");
-            break;
-        case 'v':
-            printf("Device %s %s\n", DEVICE_NAME, DEVICE_VRSN);
-            break;
-        default:
-            printf("Wrong input error. Options: 'e', 'd', 'v' -- got %c [%d]\n", symbol, symbol);
-            break;
+            case 'e':
+	            led_enable();
+                break;
+            case 'd':
+				led_disable();
+                break;
+            case 'v':
+                printf("Device name: '%s'\n", DEVICE_NAME);
+                printf("Version: '%s'\n",  DEVICE_VRSN);
+                break;
+            default:
+                printf("Введен неподдерживаемый символ: %d\n", symbol);
+                break;
         }
+        
     }
 }

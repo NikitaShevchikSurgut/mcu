@@ -1,55 +1,52 @@
-#include "adc-task.h"
 #include "hardware/adc.h"
+#include "adc-task.h"
+#include "stdint.h"
 #include "stdio.h"
 #include "pico/stdlib.h"
 
-#define ADC_GP 26
-#define ADC_CHANNEL 0
-#define ADC_TEMP_CHANNEL 4
-#define ADC_TASK_MEAS_PERIOD_US 100000
+adc_task_state_t adc_state;
+uint64_t time;
+uint64_t ADC_TASK_MEAS_PERIOD_US = 100000;
+static const uint LED_PIN = 25;
+const uint ADC_CH = 0; // номер канала АЦП
+const uint TEMP_CH = 4; // номер канала, подключенного к датчику температуры
 
-adc_task_state_t adc_task_state = ADC_TASK_STATE_IDLE;
-uint64_t timestamp;
 
-void adc_task_init()
-{
+void adc_task_init(){
     adc_init();
-    timestamp = time_us_64();
-    adc_gpio_init(ADC_GP);
+    adc_gpio_init(LED_PIN);
     adc_set_temp_sensor_enabled(true);
+    adc_state = ADC_TASK_STATE_IDLE;
+    time = 0;
 }
 
-float adc_task_read_voltage()
-{
-    adc_select_input(ADC_CHANNEL);
-    const uint16_t adc_raw = adc_read();
-    return (float)adc_raw / 4095.0f * 3.3f;
+float get_voltage(){
+    adc_select_input(ADC_CH);
+    uint16_t voltage_counts = adc_read();
+    float voltage_V = voltage_counts / 4096.0f * 3.3f;
+    return voltage_V;
 }
 
-float adc_task_read_temperature()
-{
-    adc_select_input(ADC_TEMP_CHANNEL);
-    const uint16_t adc_raw = adc_read();
-    const float voltage = (float)adc_raw / 4095.0f * 3.3f;
-    return 27.0f - (voltage - 0.706f) / 0.001721f; // 27.0f - (temp_V - 0.706f) / 0.001721f;
+float get_temp(){
+    adc_select_input(TEMP_CH);
+    uint16_t voltage_counts = adc_read();
+    float voltage_V = voltage_counts / 4096.0f * 3.3f;
+    float temp_C = 27.0f - (voltage_V - 0.706f) / 0.001721f;
+    return temp_C;
 }
 
-void adc_task_set_state(const adc_task_state_t state)
-{
-    adc_task_state = state;
+void adc_task_set_state(adc_task_state_t state){
+    adc_state = state;
 }
 
-void adc_task_handle()
-{
-    if (adc_task_state == ADC_TASK_STATE_IDLE)
-    {
-        return;
-    }
-    if (time_us_64() - timestamp > ADC_TASK_MEAS_PERIOD_US)
-    {
-        timestamp = time_us_64();
-        const float voltage_V = adc_task_read_voltage();
-        const float temp_C = adc_task_read_temperature();
-        printf("%f %f\n", voltage_V, temp_C);
+void adc_task_handle(){
+    if(adc_state == ADC_TASK_STATE_RUN){
+        if (time_us_64() > time)
+        {
+            time = time_us_64() + (ADC_TASK_MEAS_PERIOD_US / 2);
+            float voltage_V = get_voltage();
+            float temp_C = get_temp();
+            printf("%f %f\n", voltage_V, temp_C);
+        }
     }
 }

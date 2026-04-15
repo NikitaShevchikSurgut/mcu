@@ -1,18 +1,17 @@
-#include "led.h"
 #include "hardware/gpio.h"
+#include "led.h"
 
 const uint LED_PIN = 25;
 
-void led_init(void)
-{
+void led_init(){
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 }
-void led_enable(void)
-{
+
+void led_enable(){
     gpio_put(LED_PIN, 1);
 }
-void led_disable(void)
-{
+
+void led_disable(){
     gpio_put(LED_PIN, 0);
 }

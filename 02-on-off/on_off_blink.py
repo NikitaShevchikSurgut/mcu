@@ -1,41 +1,25 @@
-import serial
-import sys
+import serial, sys, select
 import time
-
-serialName = "COM8"   # <-- поменяй на свой COM
+serialName = '/dev/ttyACM0'
 serialBaudRate = 115200
+ser = serial.Serial(serialName, baudrate=serialBaudRate)
 
-print("start")
-print("e - LED ON")
-print("d - LED OFF")
-print("q - quit")
-print(f"Opening {serialName}...")
-
+print('start')
+T = 1
+e = 'e'
+d = 'd'
 try:
-    ser = serial.Serial(serialName, baudrate=serialBaudRate, timeout=1)
-except Exception as e:
-    print("ERROR opening port:", e)
-    input("Press Enter to exit...")
-    sys.exit(1)
-
-time.sleep(0.2)
-ser.reset_input_buffer()
-print("Connected!")
-
-try:
+    #ser.open()
     while True:
-        cmd = input("> ").strip()
-
-        if cmd == "q":
-            print("bye")
-            break
-
-        if not cmd:
-            continue
-
-        # отправляем только 1 символ
-        ser.write(cmd[0].encode("ascii"))
+        print("Введите период мигания: ")
+        rlist, _, _ = select.select([sys.stdin], [], [], 0)
+        if rlist:
+            T = sys.stdin.readline().strip()
+        ser.write(e.encode())
+        time.sleep(T/2)
+        ser.write(d.encode())
+        time.sleep(T/2)
 
 finally:
+    ser.write(d.encode())
     ser.close()
-    print("COM closed")
